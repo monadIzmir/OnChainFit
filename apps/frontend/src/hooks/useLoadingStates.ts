@@ -1,7 +1,7 @@
 // src/hooks/useLoadingStates.ts
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 
 interface LoadingState {
   isLoading: boolean
@@ -97,7 +97,7 @@ export function useAsync<T, E extends Error = Error>(
     }
   }, [asyncFunction, timeout])
 
-  useCallback(() => {
+  useEffect(() => {
     if (immediate) {
       execute()
     }

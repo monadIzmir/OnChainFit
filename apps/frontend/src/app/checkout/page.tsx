@@ -5,7 +5,7 @@ import { useState, FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import { useCartStore } from '@/stores/cart.store'
 import { useAuth } from '@/hooks'
-import { loadStripe } from '@stripe/js'
+import { loadStripe } from '@stripe/stripe-js'
 import { CardElement, Elements, useStripe, useElements } from '@stripe/react-stripe-js'
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_KEY || '')

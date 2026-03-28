@@ -1,13 +1,12 @@
 // src/app/(dashboard)/designer/dashboard/page.tsx
 'use client'
 
-import { useApi, useAuth } from '@/hooks'
+import { useAuth, useMyDesigns } from '@/hooks'
 import Link from 'next/link'
 
 export default function DesignerDashboard() {
   const { isDesigner } = useAuth()
-  const { fetchMyDesigns } = useApi()
-  const { data, isLoading } = fetchMyDesigns()
+  const { data, isLoading } = useMyDesigns()
 
   if (!isDesigner) {
     return <div className="text-center py-8">Access denied</div>

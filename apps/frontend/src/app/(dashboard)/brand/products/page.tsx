@@ -2,13 +2,12 @@
 'use client'
 
 import { useState } from 'react'
-import { useApi, useAuth } from '@/hooks'
+import { useAuth, useProducts } from '@/hooks'
 import Link from 'next/link'
 
 export default function BrandProductsPage() {
   const { isBrand } = useAuth()
-  const { fetchProducts } = useApi()
-  const { data, isLoading } = fetchProducts()
+  const { data, isLoading } = useProducts()
   
   const [showForm, setShowForm] = useState(false)
   const [formData, setFormData] = useState({

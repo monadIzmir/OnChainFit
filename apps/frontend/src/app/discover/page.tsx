@@ -2,15 +2,14 @@
 'use client'
 
 import { useState } from 'react'
-import { useApi, useAuth } from '@/hooks'
+import { useAuth, useDesigns } from '@/hooks'
 import { useCartStore } from '@/stores/cart.store'
 import Link from 'next/link'
 import { Header } from '@/components/Header'
 
 export default function DiscoverPage() {
   const { isAuthenticated } = useAuth()
-  const { fetchDesigns } = useApi()
-  const { data, isLoading } = fetchDesigns(0, 20)
+  const { data, isLoading } = useDesigns(0, 20)
   const { addItem } = useCartStore()
   const [searchTerm, setSearchTerm] = useState('')
 

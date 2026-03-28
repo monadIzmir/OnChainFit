@@ -1,13 +1,12 @@
 // src/app/(dashboard)/customer/orders/page.tsx
 'use client'
 
-import { useApi, useAuth } from '@/hooks'
+import { useAuth, useMyOrders } from '@/hooks'
 import Link from 'next/link'
 
 export default function OrdersPage() {
   const { isCustomer } = useAuth()
-  const { fetchMyOrders } = useApi()
-  const { data, isLoading } = fetchMyOrders()
+  const { data, isLoading } = useMyOrders()
 
   if (!isCustomer) {
     return <div className="text-center py-8">Access denied</div>
@@ -21,7 +20,7 @@ export default function OrdersPage() {
         <div className="text-center py-8">Loading orders...</div>
       ) : data?.data.length === 0 ? (
         <div className="bg-white rounded-lg border border-gray-200 p-8 text-center">
-          <p className="text-gray-500 mb-4">You haven't placed any orders yet</p>
+          <p className="text-gray-500 mb-4">You haven&apos;t placed any orders yet</p>
           <Link href="/discover" className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
             Explore Designs
           </Link>

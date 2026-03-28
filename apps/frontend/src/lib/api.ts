@@ -7,16 +7,19 @@ export async function apiCall<T>(
 ): Promise<T> {
   const { token, ...requestOptions } = options
 
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    ...requestOptions.headers,
+  const headers = new Headers(requestOptions.headers)
+  const isFormData = requestOptions.body instanceof FormData
+
+  // Let the browser set multipart boundaries automatically for FormData bodies.
+  if (!isFormData && !headers.has('Content-Type')) {
+    headers.set('Content-Type', 'application/json')
   }
 
   if (token) {
-    headers.Authorization = `Bearer ${token}`
+    headers.set('Authorization', `Bearer ${token}`)
   }
 
-  const response = await fetch(`${API_URL}/api/v1${endpoint}`, {
+  const response = await fetch(`${API_URL}${endpoint}`, {
     ...requestOptions,
     headers,
   })

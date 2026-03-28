@@ -2,13 +2,12 @@
 'use client'
 
 import { useState } from 'react'
-import { useApi, useAuth } from '@/hooks'
+import { useAuth, useProducts } from '@/hooks'
 import { DesignCanvas } from '@/components/DesignCanvas'
 
 export default function DesignerStudio() {
   const { isDesigner, user } = useAuth()
-  const { fetchProducts } = useApi()
-  const { data: productsData, isLoading } = fetchProducts()
+  const { data: productsData, isLoading } = useProducts()
   
   const [selectedProduct, setSelectedProduct] = useState<any>(null)
   const [designTitle, setDesignTitle] = useState('')

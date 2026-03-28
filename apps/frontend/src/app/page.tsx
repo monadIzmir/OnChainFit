@@ -43,7 +43,7 @@ export default function Home() {
         <div className="p-6 bg-white border border-gray-200 rounded-lg">
           <h3 className="text-xl font-bold mb-2">🎨 For Designers</h3>
           <p className="text-gray-600">
-            Design on any brand's products without upfront costs. 
+            Design on any brand&apos;s products without upfront costs.
             Receive automatic payouts to your wallet.
           </p>
         </div>

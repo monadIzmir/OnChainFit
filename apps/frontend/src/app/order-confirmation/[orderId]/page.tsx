@@ -43,7 +43,7 @@ export default function OrderConfirmationPage() {
 
         <div className="bg-blue-50 rounded-lg p-4">
           <p className="text-sm text-blue-800">
-            You'll receive an email confirmation with tracking details shortly.
+            You&apos;ll receive an email confirmation with tracking details shortly.
           </p>
         </div>
       </div>

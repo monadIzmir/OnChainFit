@@ -50,7 +50,9 @@ export async function createApp(env: Env): Promise<FastifyInstance> {
   })
 
   await app.register(fastifyCors, {
-    origin: env.APP_URL,
+    origin: env.NODE_ENV === 'development'
+      ? /^http:\/\/localhost:\d+$/
+      : env.APP_URL,
     credentials: true,
   })
 
@@ -61,6 +63,23 @@ export async function createApp(env: Env): Promise<FastifyInstance> {
   // Health check
   app.get('/health', async () => {
     return { status: 'ok' }
+  })
+
+  // API root endpoint
+  app.get('/api/v1', async () => {
+    return {
+      status: 'ok',
+      message: 'PrintChain API v1',
+      endpoints: {
+        health: '/health',
+        auth: '/api/v1/auth',
+        products: '/api/v1/products',
+        designs: '/api/v1/designs',
+        orders: '/api/v1/orders',
+        payments: '/api/v1/payments',
+        brands: '/api/v1/brands',
+      }
+    }
   })
 
   // Public auth routes (no token required)

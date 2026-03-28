@@ -128,7 +128,7 @@ export function DesignCanvas({ productTemplate, onSave }: DesignCanvasProps) {
 
     const designData = {
       canvas: fabricRef.current.toJSON(),
-      image: fabricRef.current.toDataURL('image/png'),
+      image: fabricRef.current.toDataURL({ format: 'png' }),
     }
 
     onSave?.(designData)

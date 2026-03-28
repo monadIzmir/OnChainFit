@@ -3,61 +3,80 @@ import { useQuery, useMutation } from '@tanstack/react-query'
 import { apiCall } from '../lib/api'
 import { useAuth } from './useAuth'
 
+type ApiResponse<T> = {
+  success: boolean
+  data: T
+  meta?: {
+    skip?: number
+    take?: number
+    total?: number
+  }
+}
+
+export function useDesigns(skip = 0, take = 20) {
+  const { token } = useAuth()
+  return useQuery<ApiResponse<any[]>>({
+    queryKey: ['designs', skip, take],
+    queryFn: async () => {
+      return await apiCall<ApiResponse<any[]>>(`/designs?skip=${skip}&take=${take}`, {
+        token: token ?? undefined,
+      })
+    },
+  })
+}
+
+export function useProducts(skip = 0, take = 20) {
+  const { token } = useAuth()
+  return useQuery<ApiResponse<any[]>>({
+    queryKey: ['products', skip, take],
+    queryFn: async () => {
+      return await apiCall<ApiResponse<any[]>>(`/products?skip=${skip}&take=${take}`, {
+        token: token ?? undefined,
+      })
+    },
+  })
+}
+
+export function useMyDesigns(skip = 0, take = 20) {
+  const { token } = useAuth()
+  return useQuery<ApiResponse<any[]>>({
+    queryKey: ['myDesigns', skip, take],
+    queryFn: async () => {
+      return await apiCall<ApiResponse<any[]>>(`/designs/mine?skip=${skip}&take=${take}`, {
+        token: token ?? undefined,
+      })
+    },
+    enabled: !!token,
+  })
+}
+
+export function useMyOrders(skip = 0, take = 10) {
+  const { token } = useAuth()
+  return useQuery<ApiResponse<any[]>>({
+    queryKey: ['myOrders', skip, take],
+    queryFn: async () => {
+      return await apiCall<ApiResponse<any[]>>(`/orders/mine?skip=${skip}&take=${take}`, {
+        token: token ?? undefined,
+      })
+    },
+    enabled: !!token,
+  })
+}
+
 export function useApi() {
   const { token } = useAuth()
-
-  const get = useQuery.bind(null)
-  const post = useMutation.bind(null)
-
-  const fetchDesigns = (skip = 0, take = 20) =>
-    useQuery({
-      queryKey: ['designs', skip, take],
-      queryFn: async () => {
-        return await apiCall(`/designs?skip=${skip}&take=${take}`, { token })
-      },
-    })
-
-  const fetchProducts = (skip = 0, take = 20) =>
-    useQuery({
-      queryKey: ['products', skip, take],
-      queryFn: async () => {
-        return await apiCall(`/products?skip=${skip}&take=${take}`, { token })
-      },
-    })
-
-  const fetchMyDesigns = (skip = 0, take = 20) =>
-    useQuery({
-      queryKey: ['myDesigns', skip, take],
-      queryFn: async () => {
-        return await apiCall(`/designs/mine?skip=${skip}&take=${take}`, { token })
-      },
-      enabled: !!token,
-    })
-
-  const fetchMyOrders = (skip = 0, take = 10) =>
-    useQuery({
-      queryKey: ['myOrders', skip, take],
-      queryFn: async () => {
-        return await apiCall(`/orders/mine?skip=${skip}&take=${take}`, { token })
-      },
-      enabled: !!token,
-    })
 
   const createOrder = useMutation({
     mutationFn: async (data: any) => {
       return await apiCall('/orders', {
         method: 'POST',
         body: JSON.stringify(data),
-        token,
+        token: token ?? undefined,
       })
     },
   })
 
   return {
-    fetchDesigns,
-    fetchProducts,
-    fetchMyDesigns,
-    fetchMyOrders,
     createOrder,
   }
 }
