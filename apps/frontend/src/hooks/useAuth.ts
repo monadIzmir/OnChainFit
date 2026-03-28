@@ -20,12 +20,17 @@ export function useAuth() {
   )
 
   const registerUser = useCallback(
-    async (email: string, password: string, role: 'BRAND' | 'DESIGNER' | 'CUSTOMER') => {
+    async (
+      email: string,
+      password: string,
+      role: 'BRAND' | 'DESIGNER' | 'CUSTOMER',
+      firstName: string,
+      lastName: string
+    ) => {
       const response = await apiCall<any>('/auth/register', {
         method: 'POST',
-        body: JSON.stringify({ email, password, role }),
+        body: JSON.stringify({ email, password, role, firstName, lastName }),
       })
-
       return response.data
     },
     []

@@ -10,7 +10,7 @@ export class AuthService {
     private env: Env
   ) {}
 
-  async registerUser(email: string, password: string, role: string) {
+  async registerUser(email: string, password: string, role: string, firstName?: string, lastName?: string) {
     // Check if user exists
     const existing = await this.prisma.user.findUnique({ where: { email } })
     if (existing) {
@@ -27,10 +27,13 @@ export class AuthService {
         passwordHash,
         role,
         profile: {
-          create: {},
+          create: {
+            firstName,
+            lastName,
+          },
         },
       },
-      include: { brand: true },
+      include: { brand: true, profile: true },
     })
 
     return user
@@ -39,7 +42,7 @@ export class AuthService {
   async loginUser(email: string, password: string) {
     const user = await this.prisma.user.findUnique({
       where: { email },
-      include: { brand: true },
+      include: { brand: true, profile: true },
     })
 
     if (!user) {

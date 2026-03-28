@@ -8,6 +8,8 @@ const registerSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8),
   role: z.enum(['BRAND', 'DESIGNER', 'CUSTOMER']),
+  firstName: z.string().min(1).max(50),
+  lastName: z.string().min(1).max(50),
 })
 
 const loginSchema = z.object({
@@ -21,20 +23,27 @@ export async function authRoutes(app: FastifyInstance) {
   app.post<{ Body: z.infer<typeof registerSchema> }>('/register', async (req, reply) => {
     try {
       const data = registerSchema.parse(req.body)
-      const user = await authService.registerUser(data.email, data.password, data.role)
+      const user = await authService.registerUser(
+        data.email,
+        data.password,
+        data.role,
+        data.firstName,
+        data.lastName
+      )
 
       return reply.code(201).send(
         successResponse({
           id: user.id,
           email: user.email,
           role: user.role,
+          firstName: user.profile?.firstName,
+          lastName: user.profile?.lastName,
         })
       )
     } catch (error: any) {
       if (error.message === 'USER_ALREADY_EXISTS') {
         return reply.code(409).send(errorResponse('USER_ALREADY_EXISTS', 'Email already registered'))
       }
-      
       return reply.code(400).send(errorResponse('VALIDATION_ERROR', error.message))
     }
   })
@@ -50,6 +59,8 @@ export async function authRoutes(app: FastifyInstance) {
             id: user.id,
             email: user.email,
             role: user.role,
+            firstName: user.profile?.firstName,
+            lastName: user.profile?.lastName,
           },
           accessToken,
         })

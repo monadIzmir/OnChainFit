@@ -6,6 +6,8 @@ export interface User {
   id: string
   email: string
   role: 'ADMIN' | 'BRAND' | 'DESIGNER' | 'CUSTOMER'
+  firstName?: string
+  lastName?: string
 }
 
 interface AuthStore {
