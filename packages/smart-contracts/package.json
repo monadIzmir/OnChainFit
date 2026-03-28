@@ -1,0 +1,31 @@
+{
+  "name": "@printchain/smart-contracts",
+  "version": "0.1.0",
+  "description": "PrintChain smart contracts for Monad testnet",
+  "scripts": {
+    "compile": "hardhat compile",
+    "test": "hardhat test",
+    "test:fork": "hardhat test --network monad_testnet_fork",
+    "deploy": "hardhat run scripts/deploy.ts --network monad_testnet",
+    "deploy:local": "hardhat run scripts/deploy.ts --network localhost",
+    "analyze": "slither . --json reports/slither-report.json",
+    "node:local": "hardhat node"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^4.0.0",
+    "@openzeppelin/hardhat-upgrades": "^2.1.1",
+    "@typechain/ethers-v6": "^11.1.2",
+    "@typechain/hardhat": "^9.1.0",
+    "@types/node": "^20.10.6",
+    "hardhat": "^2.19.5",
+    "hardhat-deploy": "^0.12.1",
+    "solcat": "^1.3.5",
+    "solidity-coverage": "^0.8.5",
+    "typechain": "^8.3.2"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^5.0.0",
+    "@openzeppelin/hardhat-upgrades": "^2.1.1",
+    "ethers": "^6.10.0"
+  }
+}

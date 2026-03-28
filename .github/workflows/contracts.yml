@@ -1,0 +1,40 @@
+name: Contract Tests & Deploy
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'packages/smart-contracts/**'
+      - '.github/workflows/contracts.yml'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'packages/smart-contracts/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Compile contracts
+        working-directory: packages/smart-contracts
+        run: npm run compile
+
+      - name: Run contract tests
+        working-directory: packages/smart-contracts
+        run: npm run test
+
+      - name: Run Slither analysis
+        uses: crytic/slither-action@v0.3.0
+        with:
+          target: packages/smart-contracts
+          config-file: packages/smart-contracts/slither.config.json

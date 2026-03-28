@@ -1,0 +1,226 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// ============ ENUMS ============
+
+enum Role {
+  ADMIN
+  BRAND
+  DESIGNER
+  CUSTOMER
+}
+
+enum KybStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum DesignStatus {
+  DRAFT
+  PUBLISHED
+  PAUSED
+  REMOVED
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentMethod {
+  STRIPE
+  MONAD_TOKEN
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+enum PayoutStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+// ============ MODELS ============
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  passwordHash  String?
+  role          Role      @default(CUSTOMER)
+  walletAddress String?   @unique
+  profile       Profile?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  brand          Brand?
+  designs        Design[]
+  orders         Order[]
+  sessions       Session[]
+  payouts        Payout[] @relation("PayoutDesigner")
+}
+
+model Profile {
+  id        String  @id @default(cuid())
+  userId    String  @unique
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  firstName String?
+  lastName  String?
+  avatar    String?
+  bio       String?
+}
+
+model Brand {
+  id        String     @id @default(cuid())
+  userId    String     @unique
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  logoUrl   String
+  kybStatus KybStatus  @default(PENDING)
+  products  Product[]
+  createdAt DateTime   @default(now())
+
+  @@index([kybStatus])
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  brandId     String
+  brand       Brand    @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  basePrice   Decimal  @db.Decimal(10, 2)
+  templateUrl String
+  printZones  Json     // { x: number, y: number, width: number, height: number, rotation: number }
+  category    String
+  isActive    Boolean  @default(true)
+  designs     Design[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([brandId])
+  @@index([isActive])
+}
+
+model Design {
+  id           String       @id @default(cuid())
+  designerId   String
+  designer     User         @relation(fields: [designerId], references: [id], onDelete: Cascade)
+  productId    String
+  product      Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
+  title        String
+  description  String?
+  ipfsHash     String       @unique
+  previewUrl   String
+  salePrice    Decimal      @db.Decimal(10, 2)
+  status       DesignStatus @default(DRAFT)
+  onChainId    BigInt?
+  orderItems   OrderItem[]
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  @@index([designerId])
+  @@index([productId])
+  @@index([status])
+}
+
+model Order {
+  id              String      @id @default(cuid())
+  customerId      String
+  customer        User        @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  status          OrderStatus @default(PENDING)
+  totalAmount     Decimal     @db.Decimal(10, 2)
+  shippingAddress Json        // { street, city, postalCode, country, phone, name }
+  items           OrderItem[]
+  payment         Payment?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  @@index([customerId])
+  @@index([status])
+}
+
+model OrderItem {
+  id        String  @id @default(cuid())
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  designId  String
+  design    Design  @relation(fields: [designId], references: [id], onDelete: Cascade)
+  quantity  Int     @default(1)
+  unitPrice Decimal @db.Decimal(10, 2)
+  snapshot  Json    // {designerId, brandId, salePrice, basePrice, ...}
+  payout    Payout?
+
+  @@unique([orderId, designId])
+  @@index([orderId])
+  @@index([designId])
+}
+
+model Payment {
+  id        String        @id @default(cuid())
+  orderId   String        @unique
+  order     Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  method    PaymentMethod
+  txHash    String?
+  amount    Decimal       @db.Decimal(10, 2)
+  currency  String        @default("TRY")
+  status    PaymentStatus @default(PENDING)
+  metadata  Json?         // Stripe charge ID, webhook payload, etc.
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  @@index([orderId])
+  @@index([status])
+}
+
+model Payout {
+  id          String       @id @default(cuid())
+  designerId  String
+  designer    User         @relation("PayoutDesigner", fields: [designerId], references: [id], onDelete: Cascade)
+  orderItemId String       @unique
+  orderItem   OrderItem    @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+  grossAmount Decimal      @db.Decimal(10, 2)
+  shippingFee Decimal      @db.Decimal(10, 2)
+  taxAmount   Decimal      @db.Decimal(10, 2)
+  platformFee Decimal      @db.Decimal(10, 2)
+  brandShare  Decimal      @db.Decimal(10, 2)
+  netAmount   Decimal      @db.Decimal(10, 2)
+  txHash      String?
+  status      PayoutStatus @default(PENDING)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@index([designerId])
+  @@index([status])
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}

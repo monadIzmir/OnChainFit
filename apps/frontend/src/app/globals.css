@@ -1,0 +1,18 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* View transition animations */
+::view-transition-group(*),
+::view-transition-old(*),
+::view-transition-new(*) {
+  animation-duration: 0.25s;
+  animation-timing-function: cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+/* Print-safe zone visualization */
+.print-safe-zone {
+  border: 2px dashed #ef4444;
+  pointer-events: none;
+  z-index: 10;
+}

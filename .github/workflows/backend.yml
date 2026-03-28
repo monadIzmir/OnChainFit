@@ -1,0 +1,67 @@
+name: Backend Tests
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'apps/backend/**'
+      - '.github/workflows/backend.yml'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'apps/backend/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: printchain
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: printchain
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run backend tests
+        working-directory: apps/backend
+        env:
+          DATABASE_URL: postgresql://printchain:password@localhost:5432/printchain
+          REDIS_URL: redis://localhost:6379
+          ELASTICSEARCH_URL: http://localhost:9200
+          JWT_SECRET: test-secret-key-at-least-32-chars-long
+          JWT_REFRESH_SECRET: test-refresh-secret-key-at-least-32-chars-long
+          MONAD_TESTNET_RPC: https://testnet-rpc.monad.xyz
+          BACKEND_SIGNER_PRIVATE_KEY: '0x0000000000000000000000000000000000000000000000000000000000000000'
+        run: npm run test
+
+      - name: Run linter
+        working-directory: apps/backend
+        run: npm run lint

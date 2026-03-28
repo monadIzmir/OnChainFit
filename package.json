@@ -1,0 +1,25 @@
+{
+  "name": "printchain",
+  "version": "0.1.0",
+  "description": "Print-on-Demand platform with blockchain royalty distribution",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "test": "turbo test",
+    "test:e2e": "turbo test:e2e",
+    "type-check": "turbo type-check",
+    "db:migrate": "cd apps/backend && npx prisma migrate dev",
+    "db:seed": "cd apps/backend && npx prisma db seed",
+    "contracts:deploy": "cd packages/smart-contracts && npx hardhat run scripts/deploy.ts --network monad_testnet"
+  },
+  "devDependencies": {
+    "turbo": "^2.0.0",
+    "typescript": "^5.3.3"
+  }
+}

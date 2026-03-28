@@ -1,0 +1,26 @@
+{
+  "extends": ["//"],
+  "globalDependencies": [".env", ".env.*.local"],
+  "pipeline": {
+    "build": {
+      "outputs": ["dist/**", ".next/**"],
+      "cache": false
+    },
+    "lint": {
+      "outputs": []
+    },
+    "test": {
+      "outputs": ["coverage/**"]
+    },
+    "test:e2e": {
+      "cache": false
+    },
+    "type-check": {
+      "outputs": []
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    }
+  }
+}

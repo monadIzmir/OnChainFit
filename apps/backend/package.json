@@ -1,0 +1,51 @@
+{
+  "name": "@printchain/backend",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "lint": "eslint src --ext .ts",
+    "test": "vitest",
+    "test:coverage": "vitest --coverage",
+    "generate:types": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:seed": "node --loader tsx prisma/seed.ts"
+  },
+  "dependencies": {
+    "@fastify/cors": "^8.5.0",
+    "@fastify/helmet": "^11.1.1",
+    "@fastify/jwt": "^7.8.1",
+    "@fastify/multipart": "^8.1.0",
+    "@fastify/rate-limit": "^9.1.0",
+    "@fastify/redis": "^6.1.1",
+    "@prisma/client": "^5.8.0",
+    "@siwe/ether": "^2.0.0",
+    "bullmq": "^5.4.9",
+    "dotenv": "^16.3.1",
+    "ethers": "^6.10.0",
+    "fastify": "^4.25.2",
+    "ioredis": "^5.3.2",
+    "joi": "^17.11.1",
+    "jsonwebtoken": "^9.1.2",
+    "pino": "^8.17.2",
+    "pino-pretty": "^10.3.1",
+    "sharp": "^0.33.1",
+    "viem": "^2.2.4",
+    "wagmi": "^2.0.0",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/jsonwebtoken": "^9.0.7",
+    "@types/node": "^20.10.6",
+    "@typescript-eslint/eslint-plugin": "^6.17.0",
+    "@typescript-eslint/parser": "^6.17.0",
+    "eslint": "^8.56.0",
+    "prisma": "^5.8.0",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.3",
+    "vitest": "^1.1.0"
+  }
+}
