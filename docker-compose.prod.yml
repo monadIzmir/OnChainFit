@@ -1,0 +1,128 @@
+version: '3.9'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: printchain_postgres
+    environment:
+      POSTGRES_USER: ${DB_USER:-printchain}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-printchain123}
+      POSTGRES_DB: ${DB_NAME:-printchain_db}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U printchain"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - printchain_network
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: printchain_redis
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - printchain_network
+
+  # Elasticsearch
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.10.0
+    container_name: printchain_elasticsearch
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: "false"
+      ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+    ports:
+      - "${ELASTICSEARCH_PORT:-9200}:9200"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:9200 >/dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - printchain_network
+
+  # Fastify Backend
+  backend:
+    build:
+      context: ./apps/backend
+      dockerfile: Dockerfile
+    container_name: printchain_backend
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      PORT: 3001
+      DATABASE_URL: postgresql://${DB_USER:-printchain}:${DB_PASSWORD:-printchain123}@postgres:5432/${DB_NAME:-printchain_db}
+      REDIS_URL: redis://redis:6379
+      ELASTICSEARCH_URL: http://elasticsearch:9200
+      JWT_SECRET: ${JWT_SECRET:-your-secret-key-change-in-production}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
+      PINATA_API_KEY: ${PINATA_API_KEY}
+      PINATA_API_SECRET: ${PINATA_API_SECRET}
+      R2_ACCESS_KEY_ID: ${R2_ACCESS_KEY_ID}
+      R2_SECRET_ACCESS_KEY: ${R2_SECRET_ACCESS_KEY}
+      R2_BUCKET_NAME: ${R2_BUCKET_NAME}
+      R2_ACCOUNT_ID: ${R2_ACCOUNT_ID}
+      MONAD_RPC_URL: ${MONAD_RPC_URL:-https://testnet-rpc.monad.xyz}
+      PRINTCHAIN_REGISTRY_ADDRESS: ${PRINTCHAIN_REGISTRY_ADDRESS}
+      ROYALTY_DISTRIBUTOR_ADDRESS: ${ROYALTY_DISTRIBUTOR_ADDRESS}
+    ports:
+      - "${BACKEND_PORT:-3001}:3001"
+    networks:
+      - printchain_network
+    restart: unless-stopped
+
+  # Next.js Frontend
+  frontend:
+    build:
+      context: ./apps/frontend
+      dockerfile: Dockerfile
+    container_name: printchain_frontend
+    depends_on:
+      - backend
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      NEXT_PUBLIC_BASE_URL: http://localhost:3000
+      NEXT_PUBLIC_API_URL: http://localhost:3001/api
+      NEXT_PUBLIC_STRIPE_KEY: ${NEXT_PUBLIC_STRIPE_KEY}
+      NEXT_PUBLIC_MONAD_RPC_URL: ${NEXT_PUBLIC_MONAD_RPC_URL:-https://testnet-rpc.monad.xyz}
+      NEXT_PUBLIC_PRINTCHAIN_REGISTRY_ADDRESS: ${PRINTCHAIN_REGISTRY_ADDRESS}
+      NEXT_PUBLIC_ROYALTY_DISTRIBUTOR_ADDRESS: ${ROYALTY_DISTRIBUTOR_ADDRESS}
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+    networks:
+      - printchain_network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  elasticsearch_data:
+    driver: local
+
+networks:
+  printchain_network:
+    driver: bridge

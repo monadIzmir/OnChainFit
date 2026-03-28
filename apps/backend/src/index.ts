@@ -1,4 +1,5 @@
 // src/index.ts
+import 'dotenv/config'
 import { loadEnv } from './config/env'
 import { createApp } from './app'
 

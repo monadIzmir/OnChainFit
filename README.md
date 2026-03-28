@@ -39,51 +39,53 @@ PrintChain, Koton, LCWaikiki gibi **markaların boş ürün şablonlarını** pl
 ## 🚀 Hızlı Başlangıç
 
 ### Ön Koşullar
-- Node.js 22+
+- Node.js 20+
+- pnpm 8+
 - Docker & Docker Compose
 - Git
 
-### Kurulum
+### Development Kurulumu
 
-1. **Repository klonlama**
+👉 **[Detailed Quick Start Guide](QUICK_START.md)** - Adım adım rehber
+
+**Kısa kurulum:**
 ```bash
 git clone https://github.com/monadIzmir/OnChainFit.git
 cd OnChainFit
+
+pnpm install
+
+# Linux/macOS
+chmod +x scripts/setup-env.sh
+./scripts/setup-env.sh
+
+# Windows
+scripts\setup-env.bat
+
+docker-compose -f docker-compose.dev.yml up -d
+pnpm -F @printchain/backend run migrate:dev
+
+pnpm dev
 ```
 
-2. **Bağımlılıkları yükleme**
-```bash
-npm install
-# veya pnpm install
-```
-
-3. **Çevresel değişkenleri ayarlama**
-```bash
-cp .env.example .env.local
-# .env.local dosyasını edit edin
-```
-
-4. **Altyapı başlatma (Docker)**
-```bash
-docker-compose up -d
-```
-
-5. **Database migration**
-```bash
-npm run db:migrate
-```
-
-6. **Development server başlatma**
-```bash
-npm run dev
-```
-
-Erişim:
+**Erişim:**
 - Frontend: http://localhost:3000
-- API: http://localhost:4000
+- API: http://localhost:3001
 - PostgreSQL: localhost:5432
 - Redis: localhost:6379
 - Elasticsearch: localhost:9200
+
+### Production Deployment
+
+👉 **[Complete Deployment Guide](DEPLOYMENT_GUIDE.md)** - Cloud deployment
+
+Hızlı deployment:
+```bash
+# Docker production build
+docker-compose -f docker-compose.prod.yml up -d
+
+# Or deploy to Vercel/Railway/AWS/DigitalOcean
+```
 
 ## 📁 Proje Yapısı
 
@@ -134,84 +136,245 @@ npm run contracts:deploy
 
 Kontrat adreslerini `.env.local` dosyasına kopyalayın.
 
-## 📚 API Dokumentasyon
+## 📚 Dokümantasyon
+
+### Getting Started
+- **[Quick Start Guide](QUICK_START.md)** - 5-minute local setup
+- **[SETUP_GUIDE.md](SETUP_GUIDE.md)** - Detailed environment configuration
+
+### Development
+- **[Contributing Guide](CONTRIBUTING.md)** - Development workflow & code standards
+- **[API Documentation](API_DOCUMENTATION.md)** - 20+ endpoints with examples
+- **[Testing Guide](TESTING_GUIDE.md)** - Unit, component, E2E testing (NEW)
+
+### Operations & Performance
+- **[Deployment Guide](DEPLOYMENT_GUIDE.md)** - Deploy to Vercel/Railway/AWS/DigitalOcean
+- **[Performance Optimization](PERFORMANCE_OPTIMIZATION.md)** - Frontend/backend optimization (NEW)
+- **[Monitoring & Observability](MONITORING_OBSERVABILITY.md)** - Sentry/logging/metrics setup (NEW)
+- **[Maintenance Runbook](MAINTENANCE_RUNBOOK.md)** - Operations procedures (NEW)
+
+### Secrets & Configuration
+- **[Secrets Management](SECRETS_MANAGEMENT.md)** - Environment variable setup & rotation
+
+### Project Status
+- **[Phase 12 Completion](PHASE_12_COMPLETION.md)** - Final testing & polishing summary (NEW)
+
+## 🚀 API Endpoints
 
 ### Auth Service
 ```
-POST   /api/v1/auth/register
-POST   /api/v1/auth/login
-POST   /api/v1/auth/web3/nonce
-POST   /api/v1/auth/web3/verify
+POST   /auth/register
+POST   /auth/login
+POST   /auth/web3/nonce
+POST   /auth/web3/verify
 ```
 
-### Product Service
+### Product Service (Brand)
 ```
-POST   /api/v1/products           [BRAND]
-GET    /api/v1/products           [PUBLIC]
-GET    /api/v1/products/:id       [PUBLIC]
-```
-
-### Design Service
-```
-POST   /api/v1/designs            [DESIGNER]
-GET    /api/v1/designs            [PUBLIC]
-GET    /api/v1/designs/mine       [DESIGNER]
-PUT    /api/v1/designs/:id/price  [DESIGNER]
+POST   /products           Create product template
+GET    /products           List all products
+GET    /products/:id       Get product details
+PUT    /products/:id       Update product
+DELETE /products/:id       Delete product
 ```
 
-Detaylı dokumentasyon için [API Docs](./docs/API.md) bakınız.
+### Design Service (Designer)
+```
+POST   /designs            Create design with Fabric.js
+GET    /designs            Buy designs (public)
+GET    /designs/mine       My designs
+GET    /designs/:id        Design details
+PUT    /designs/:id/price  Update design price
+PUT    /designs/:id/publish Publish design
+DELETE /designs/:id        Delete design
+```
+
+### Orders Service (Customer)
+```
+POST   /orders             Create order
+GET    /orders/mine        My orders
+GET    /orders/:id         Order details
+POST   /orders/:id/cancel  Cancel order
+```
+
+### Payments Service
+```
+POST   /payments/stripe/intent         Create Stripe payment intent
+POST   /payments/stripe/webhook        Handle Stripe webhooks
+POST   /payments/monad/verify          Verify MONAD token payment
+GET    /payments/:orderId              Get payment status
+```
 
 ## 🧪 Test
 
 ```bash
 # Unit tests
-npm run test
+pnpm test
 
 # E2E tests
-npm run test:e2e
+pnpm test:e2e
 
 # Coverage raporu
-npm run test -- --coverage
+pnpm test -- --coverage
+
+# Backend specific
+pnpm -F @printchain/backend run test
+
+# Frontend specific
+pnpm -F @printchain/frontend run test
 ```
 
-## 📋 Geliştirme Yol Haritası
+## 🔄 CI/CD Pipelines
 
-- ✅ **Faz 1 - MVP** (2 ay)
-  - Kullanıcı authentication
-  - Marka ürün yönetimi
-  - Temel mock-up editörü
-  - Stripe ödeme entegrasyonu
-  
-- ⏳ **Faz 2 - Otomasyon** (1.5 ay)
-  - RoyaltyDistributor akıllı kontrat
-  - IPFS entegrasyonu
-  - Kargo API integration
-  - Otomatik payout
+GitHub Actions workflows otomatik olarak tetiklenir:
 
-- ⏳ **Faz 3 - Ölçeklendirme** (2 ay)
-  - MONAD token ödeme
-  - Gelişmiş arama
-  - Analitik dashboard
-  - PWA support
+- **Frontend**: `.github/workflows/frontend.yml`
+  - Lint, format check, build test
+  - Docker image build & push
+  - Staging deployment
+
+- **Backend**: `.github/workflows/backend.yml`
+  - Lint, format check, build test
+  - Database migration test
+  - Docker image build & push
+  - Staging deployment
+
+- **Smart Contracts**: `.github/workflows/contracts.yml`
+  - Solidity lint & format
+  - Hardhat compile & test
+  - Slither security analysis
+  - Monad testnet deployment
+
+## 🐳 Docker
+
+```bash
+# Development
+docker-compose -f docker-compose.dev.yml up -d
+
+# Production
+docker-compose -f docker-compose.prod.yml up -d
+
+# Push to registry
+docker tag printchain-backend:latest your-registry/printchain-backend:latest
+docker push your-registry/printchain-backend:latest
+```
+
+## 🔗 Blockchain Integration
+
+### Smart Contracts
+
+```bash
+# Compile
+pnpm -F @printchain/smart-contracts run compile
+
+# Test
+pnpm -F @printchain/smart-contracts run test
+
+# Deploy to Monad testnet
+pnpm -F @printchain/smart-contracts run deploy:monad
+
+# Verify contract
+pnpm -F @printchain/smart-contracts run verify:monad
+```
+
+### Contracts
+
+- **PrintChainRegistry.sol**: Design registration dengan IPFS hash
+- **RoyaltyDistributor.sol**: Otomatik payment distribution dengan pull-payment pattern
+
+Monad RPC: https://testnet-rpc.monad.xyz
+
+## 📋 İş Yol Haritası
+
+### ✅ MVP Tamamlandı (Faz 1)
+- ✅ Kullanıcı authentication (Email + Web3 SIWE)
+- ✅ Marka ürün şablonu yönetimi
+- ✅ Tasarımcı tasarım studio (Fabric.js)
+- ✅ IPFS + Cloudflare R2 storage
+- ✅ Stripe ödeme entegrasyonu
+- ✅ Blockchain registry (Monad Testnet)
+- ✅ Role-based dashboard UI
+- ✅ API documentation
+
+### ⏳ Faz 2 - Otomasyon (Planlanan)
+- Otomatik royalty distribution
+- Kargo API integration
+- Payout sistem
+- Email notifications
+- Advanced analytics
+- Search optimization
+
+### ⏳ Faz 3 - Ölçeklendirme (Planlanan)
+- MONAD token ödeme
+- Multi-language support
+- PWA mobile app
+- Social features
+- Community marketplace
 
 ## 🔒 Güvenlik
 
-- JWT + Web3 SIWE authentication
-- Rate limiting (Kong Gateway)
-- Input validation (Zod)
-- File upload scanning
-- Smart contract audit (Slither)
-- GDPR compliance
+- ✅ JWT Authentication + Web3 SIWE
+- ✅ Rate limiting & DDoS protection
+- ✅ Input validation (Zod schema)
+- ✅ SQL injection prevention (Prisma ORM)
+- ✅ CORS configuration
+- ✅ Smart contract security (Slither analysis)
+- ✅ Environment variable encryption
+- ✅ Helmet.js security headers
 
-## 📞 Destek
+**Security Best Practices:**
+- Rotate API keys monthly
+- Use managed secrets (not in .env)
+- Enable HTTPS/SSL
+- Regular security audits
+- Follow OWASP Top 10
 
-- GitHub Issues: [Issues](https://github.com/monadIzmir/OnChainFit/issues)
-- Discussions: [Discussions](https://github.com/monadIzmir/OnChainFit/discussions)
+## 🤝 Contributing
 
-## 📝 Lisans
+Katkı yapmak isterseniz [Contributing Guide](CONTRIBUTING.md) okuyun.
 
-MIT
+```bash
+# 1. Fork repository
+git clone https://github.com/YOUR_USERNAME/OnChainFit.git
+git checkout -b feature/your-feature
+
+# 2. Make changes & test
+pnpm lint
+pnpm test
+
+# 3. Create pull request
+git push origin feature/your-feature
+```
+
+**Code Standards:**
+- TypeScript (strict mode)
+- Conventional commits
+- Unit tests required
+- Prettier formatting
+- ESLint rules
+
+## 📞 Destek & İletişim
+
+- **GitHub Issues**: [Issues](https://github.com/monadIzmir/OnChainFit/issues)
+- **GitHub Discussions**: [Discussions](https://github.com/monadIzmir/OnChainFit/discussions)
+- **Email**: support@printchain.io
+- **Discord**: [Community Server]
+
+## 📄 Lisans
+
+MIT License - See [LICENSE](LICENSE) file
+
+## 🙏 Teşekkürler
+
+- Monad team for testnet infrastructure
+- Fabric.js community
+- OpenZeppelin Contracts
+- All contributors & supporters
 
 ---
 
-**Monad Testnet RPC**: https://testnet-rpc.monad.xyz
+**Status:** 🟢 MVP Complete - Production Ready
+
+**Last Updated:** March 2026 | **Version:** 1.0.0
+
+**Monad Testnet RPC:** https://testnet-rpc.monad.xyz

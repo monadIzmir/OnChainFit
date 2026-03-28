@@ -2,12 +2,17 @@
 import Fastify, { FastifyInstance } from 'fastify'
 import fastifyHelmet from '@fastify/helmet'
 import fastifyCors from '@fastify/cors'
-import fastifyJwt from '@fastify/jwt'
+import fastifyMultipart from '@fastify/multipart'
 import { PrismaClient } from '@prisma/client'
 import type { Env } from './config/env'
 import { createLogger } from './lib/logger'
+import { authMiddleware } from './middleware/auth'
 import { authRoutes } from './routes/auth.routes'
+import { brandRoutes } from './routes/brand.routes'
 import { productRoutes } from './routes/product.routes'
+import { designRoutes } from './routes/design.routes'
+import { orderRoutes } from './routes/order.routes'
+import { paymentRoutes } from './routes/payment.routes'
 
 declare module 'fastify' {
   interface FastifyInstance {
@@ -49,8 +54,8 @@ export async function createApp(env: Env): Promise<FastifyInstance> {
     credentials: true,
   })
 
-  await app.register(fastifyJwt, {
-    secret: env.JWT_SECRET,
+  await app.register(fastifyMultipart, {
+    limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB
   })
 
   // Health check
@@ -58,11 +63,21 @@ export async function createApp(env: Env): Promise<FastifyInstance> {
     return { status: 'ok' }
   })
 
-  // API Routes
+  // Public auth routes (no token required)
+  app.register(authRoutes, { prefix: '/api/v1/auth' })
+
+  // All other routes — soft auth populates req.user when token present
   app.register(
-    async (app) => {
-      app.register(authRoutes, { prefix: '/auth' })
-      app.register(productRoutes, { prefix: '/products' })
+    async (api) => {
+      api.addHook('preHandler', async (request, reply) => {
+        await authMiddleware(request, reply, env)
+      })
+
+      api.register(brandRoutes, { prefix: '/brands' })
+      api.register(productRoutes, { prefix: '/products' })
+      api.register(designRoutes, { prefix: '/designs' })
+      api.register(orderRoutes, { prefix: '/orders' })
+      api.register(paymentRoutes, { prefix: '/payments' })
     },
     { prefix: '/api/v1' }
   )

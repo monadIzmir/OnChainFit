@@ -6,6 +6,8 @@ export interface SuccessResponse<T> {
     page?: number
     limit?: number
     total?: number
+    skip?: number
+    take?: number
   }
 }
 

@@ -10,7 +10,7 @@ export class AuthService {
     private env: Env
   ) {}
 
-  async registerUser(email: string, password: string, role: 'BRAND' | 'DESIGNER' | 'CUSTOMER') {
+  async registerUser(email: string, password: string, role: string) {
     // Check if user exists
     const existing = await this.prisma.user.findUnique({ where: { email } })
     if (existing) {

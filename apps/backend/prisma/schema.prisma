@@ -1,8 +1,7 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
+// This is your Prisma schema file
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -10,74 +9,24 @@ generator client {
   provider = "prisma-client-js"
 }
 
-// ============ ENUMS ============
-
-enum Role {
-  ADMIN
-  BRAND
-  DESIGNER
-  CUSTOMER
-}
-
-enum KybStatus {
-  PENDING
-  APPROVED
-  REJECTED
-}
-
-enum DesignStatus {
-  DRAFT
-  PUBLISHED
-  PAUSED
-  REMOVED
-}
-
-enum OrderStatus {
-  PENDING
-  CONFIRMED
-  PROCESSING
-  SHIPPED
-  DELIVERED
-  CANCELLED
-  REFUNDED
-}
-
-enum PaymentMethod {
-  STRIPE
-  MONAD_TOKEN
-}
-
-enum PaymentStatus {
-  PENDING
-  COMPLETED
-  FAILED
-  REFUNDED
-}
-
-enum PayoutStatus {
-  PENDING
-  PROCESSING
-  COMPLETED
-  FAILED
-}
-
 // ============ MODELS ============
+// Note: enums and Json types are replaced with String for SQLite compatibility
 
 model User {
-  id            String    @id @default(cuid())
-  email         String    @unique
+  id            String   @id @default(cuid())
+  email         String   @unique
   passwordHash  String?
-  role          Role      @default(CUSTOMER)
-  walletAddress String?   @unique
+  role          String   @default("CUSTOMER") // ADMIN | BRAND | DESIGNER | CUSTOMER
+  walletAddress String?  @unique
   profile       Profile?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
-  brand          Brand?
-  designs        Design[]
-  orders         Order[]
-  sessions       Session[]
-  payouts        Payout[] @relation("PayoutDesigner")
+  brand    Brand?
+  designs  Design[]
+  orders   Order[]
+  sessions Session[]
+  payouts  Payout[]  @relation("PayoutDesigner")
 }
 
 model Profile {
@@ -91,14 +40,14 @@ model Profile {
 }
 
 model Brand {
-  id        String     @id @default(cuid())
-  userId    String     @unique
-  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id        String    @id @default(cuid())
+  userId    String    @unique
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   name      String
   logoUrl   String
-  kybStatus KybStatus  @default(PENDING)
+  kybStatus String    @default("PENDING") // PENDING | APPROVED | REJECTED
   products  Product[]
-  createdAt DateTime   @default(now())
+  createdAt DateTime  @default(now())
 
   @@index([kybStatus])
 }
@@ -109,9 +58,9 @@ model Product {
   brand       Brand    @relation(fields: [brandId], references: [id], onDelete: Cascade)
   name        String
   description String?
-  basePrice   Decimal  @db.Decimal(10, 2)
+  basePrice   Decimal
   templateUrl String
-  printZones  Json     // { x: number, y: number, width: number, height: number, rotation: number }
+  printZones  String   // JSON string: { x, y, width, height, rotation }
   category    String
   isActive    Boolean  @default(true)
   designs     Design[]
@@ -123,21 +72,21 @@ model Product {
 }
 
 model Design {
-  id           String       @id @default(cuid())
-  designerId   String
-  designer     User         @relation(fields: [designerId], references: [id], onDelete: Cascade)
-  productId    String
-  product      Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
-  title        String
-  description  String?
-  ipfsHash     String       @unique
-  previewUrl   String
-  salePrice    Decimal      @db.Decimal(10, 2)
-  status       DesignStatus @default(DRAFT)
-  onChainId    BigInt?
-  orderItems   OrderItem[]
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
+  id          String     @id @default(cuid())
+  designerId  String
+  designer    User       @relation(fields: [designerId], references: [id], onDelete: Cascade)
+  productId   String
+  product     Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  ipfsHash    String     @unique
+  previewUrl  String
+  salePrice   Decimal
+  status      String     @default("DRAFT") // DRAFT | PUBLISHED | PAUSED | REMOVED
+  onChainId   BigInt?
+  orderItems  OrderItem[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
 
   @@index([designerId])
   @@index([productId])
@@ -148,9 +97,9 @@ model Order {
   id              String      @id @default(cuid())
   customerId      String
   customer        User        @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  status          OrderStatus @default(PENDING)
-  totalAmount     Decimal     @db.Decimal(10, 2)
-  shippingAddress Json        // { street, city, postalCode, country, phone, name }
+  status          String      @default("PENDING") // PENDING | CONFIRMED | PROCESSING | SHIPPED | DELIVERED | CANCELLED | REFUNDED
+  totalAmount     Decimal
+  shippingAddress String      // JSON string: { street, city, postalCode, country, phone, name }
   items           OrderItem[]
   payment         Payment?
   createdAt       DateTime    @default(now())
@@ -167,8 +116,8 @@ model OrderItem {
   designId  String
   design    Design  @relation(fields: [designId], references: [id], onDelete: Cascade)
   quantity  Int     @default(1)
-  unitPrice Decimal @db.Decimal(10, 2)
-  snapshot  Json    // {designerId, brandId, salePrice, basePrice, ...}
+  unitPrice Decimal
+  snapshot  String  // JSON string: { designerId, brandId, salePrice, basePrice }
   payout    Payout?
 
   @@unique([orderId, designId])
@@ -177,38 +126,38 @@ model OrderItem {
 }
 
 model Payment {
-  id        String        @id @default(cuid())
-  orderId   String        @unique
-  order     Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  method    PaymentMethod
+  id        String   @id @default(cuid())
+  orderId   String   @unique
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  method    String   // STRIPE | MONAD_TOKEN
   txHash    String?
-  amount    Decimal       @db.Decimal(10, 2)
-  currency  String        @default("TRY")
-  status    PaymentStatus @default(PENDING)
-  metadata  Json?         // Stripe charge ID, webhook payload, etc.
-  createdAt DateTime      @default(now())
-  updatedAt DateTime      @updatedAt
+  amount    Decimal
+  currency  String   @default("TRY")
+  status    String   @default("PENDING") // PENDING | COMPLETED | FAILED | REFUNDED
+  metadata  String?  // JSON string
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([orderId])
   @@index([status])
 }
 
 model Payout {
-  id          String       @id @default(cuid())
+  id          String   @id @default(cuid())
   designerId  String
-  designer    User         @relation("PayoutDesigner", fields: [designerId], references: [id], onDelete: Cascade)
-  orderItemId String       @unique
-  orderItem   OrderItem    @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
-  grossAmount Decimal      @db.Decimal(10, 2)
-  shippingFee Decimal      @db.Decimal(10, 2)
-  taxAmount   Decimal      @db.Decimal(10, 2)
-  platformFee Decimal      @db.Decimal(10, 2)
-  brandShare  Decimal      @db.Decimal(10, 2)
-  netAmount   Decimal      @db.Decimal(10, 2)
+  designer    User     @relation("PayoutDesigner", fields: [designerId], references: [id], onDelete: Cascade)
+  orderItemId String   @unique
+  orderItem   OrderItem @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+  grossAmount Decimal
+  shippingFee Decimal
+  taxAmount   Decimal
+  platformFee Decimal
+  brandShare  Decimal
+  netAmount   Decimal
   txHash      String?
-  status      PayoutStatus @default(PENDING)
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  status      String   @default("PENDING") // PENDING | PROCESSING | COMPLETED | FAILED
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   @@index([designerId])
   @@index([status])

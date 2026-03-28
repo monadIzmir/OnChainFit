@@ -23,7 +23,7 @@ export class ProductService {
         description: data.description,
         basePrice: new Decimal(data.basePrice),
         templateUrl: data.templateUrl,
-        printZones: data.printZones,
+        printZones: JSON.stringify(data.printZones),
         category: data.category,
       },
     })

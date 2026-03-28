@@ -1,6 +1,7 @@
 {
   "name": "printchain",
   "version": "0.1.0",
+  "packageManager": "npm@10.9.2",
   "description": "Print-on-Demand platform with blockchain royalty distribution",
   "private": true,
   "workspaces": [
@@ -19,7 +20,11 @@
     "contracts:deploy": "cd packages/smart-contracts && npx hardhat run scripts/deploy.ts --network monad_testnet"
   },
   "devDependencies": {
+    "@types/bcrypt": "^6.0.0",
     "turbo": "^2.0.0",
     "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "fabric": "^5.5.2"
   }
 }
